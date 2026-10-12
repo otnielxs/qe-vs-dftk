@@ -35,3 +35,10 @@ def parse_qe(path):
         "gamma_eigenvalues_eV": gamma,
         "n_scf_iterations": int(iters.group(1)) if iters else None,
     }
+def parse_qe_energy(path):
+    """Total energy (Ry) only; works for runs without verbosity='high'."""
+    text = Path(path).read_text()
+    energies = re.findall(rf"^!\s+total energy\s+=\s+({FLOAT})\s+Ry", text, re.M)
+    if not energies:
+        raise ValueError(f"No converged total energy found in {path}")
+    return float(energies[-1])

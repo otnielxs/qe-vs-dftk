@@ -16,6 +16,7 @@ cd qe-vs-dftk
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
 python -m pip install -e ".[dev]"
 ./scripts/run_si.sh
+./scripts/run_si_eos.sh
 ```
 
 ## Stage 1: bulk silicon
@@ -35,6 +36,28 @@ Results (QE 7.5 vs DFTK 0.8.0):
 | Total energy | +0.0046 meV/atom |
 | Gamma eigenvalues relative to VBM (8 bands) | all within 0.04 meV |
 
+## Stage 2: equation of state of bulk silicon
+
+9 lattice constants (10.33 Bohr ±4%), fixed occupations, 60 Ry / 30 Ha cutoff,
+8x8x8 k-grid, same ONCV pseudopotential. Third-order Birch-Murnaghan fit.
+Run with `./scripts/run_si_eos.sh`.
+
+| | a0 (Å) | B0 (GPa) | B0' |
+|---|---|---|---|
+| QE 7.5 | 5.4777 | 87.37 | 4.25 |
+| DFTK 0.8.0 | 5.4777 | 87.37 | 4.25 |
+
+![Si equation of state](results/si_eos.png)
+
+The two codes agree to 3e-6 Å in a0 and 0.0004 GPa in B0. The largest energy
+difference over all volumes is 0.01 meV/atom. The Birch-Murnaghan fit residual
+(0.027 meV/atom) is the same for both codes, so it comes from the fit model and
+not from the codes.
+
+For reference, PBE literature values for Si are about 5.47 Å and 88-89 GPa;
+experiment gives about 5.43 Å and 99 GPa. PBE is known to overestimate the
+lattice constant and underestimate the bulk modulus.
+
 ### Notes
 
 - Absolute Fermi levels differ (about 0.9 eV) because the zero of the electrostatic
@@ -49,7 +72,7 @@ Results (QE 7.5 vs DFTK 0.8.0):
 
 - [x] Stage 1: Si total energy and Gamma eigenvalues
 - [ ] Si with fixed occupations (clean band gap)
-- [ ] Stage 2: E-V curve (lattice constant, bulk modulus)
+- [x] Stage 2: E-V curve (lattice constant, bulk modulus)
 - [ ] Stage 3: metal (Al) and smearing
 - [ ] Stage 4: convergence and timing
 - [ ] Stage 5: MoS2 monolayer
