@@ -1,0 +1,13 @@
+{
+  "a_bohr": 7.65,
+  "ecut_ry": 40.0,
+  "pseudo": "Al_ONCV_PBE-1.2.upf",
+  "n_semicore_bands": 4,
+  "base": {"smearing": "mv", "width_ry": 0.02, "nk": 16},
+  "smearing_scan": {
+    "types": ["gaussian", "mv", "fd"],
+    "widths_ry": [0.01, 0.02, 0.04, 0.08],
+    "nk": 16
+  },
+  "k_scan": {"nks": [8, 12, 16, 20, 24], "smearing": "mv", "width_ry": 0.02}
+}

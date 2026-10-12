@@ -10,3 +10,6 @@ systems/si_eos/dftk/eos_results.json
 systems/si_bands/qe/
 systems/si_bands/kpath.json
 systems/si_bands/dftk/bands_results.json
+systems/al/qe/
+systems/al/cases.json
+systems/al/dftk/al_results.json

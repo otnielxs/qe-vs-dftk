@@ -18,6 +18,7 @@ python -m pip install -e ".[dev]"
 ./scripts/run_si.sh
 ./scripts/run_si_eos.sh
 ./scripts/run_si_bands.sh
+./scripts/run_al.sh
 ```
 
 ## Stage 1: bulk silicon
@@ -80,6 +81,29 @@ eigenvalues are not comparable between codes. The largest difference over all
 differences of about 0.1 meV are rounding noise. As expected, PBE underestimates
 the experimental indirect gap (1.17 eV).
 
+## Stage 4: aluminum (metal) and smearing
+
+fcc Al, a = 7.65 Bohr, ONCV pseudopotential (SG15), 40 Ry / 20 Ha cutoff.
+Run with `./scripts/run_al.sh`. 16 cases: three smearing types (Gaussian,
+Marzari-Vanderbilt, Fermi-Dirac) at four widths on a 16x16x16 grid, and a k-grid
+scan from 8x8x8 to 24x24x24. QE `degauss` (Ry) corresponds to DFTK `temperature` (Ha) / 2 ... fill in
+the conversion you used.
+
+![Al smearing and k-point convergence](results/al_smearing.png)
+
+| Quantity | Result |
+|---|---|
+| Max free-energy difference over all cases | ... meV/atom |
+| Max difference in bandwidth (εF - ε1(Γ)) | ... meV |
+| Bandwidth (QE, MV 0.02 Ry, 16x16x16) | ... eV |
+
+Notes:
+- The Fermi level itself is not comparable between codes, so the occupied
+  bandwidth is used instead.
+- Marzari-Vanderbilt (cold) smearing gives a free energy that depends weakly on
+  the width, while Gaussian and Fermi-Dirac depend strongly on it.
+- Metals need dense k-grids: the energy changes by ... meV/atom between 8x8x8 and 24x24x24.
+
 ### Notes
 
 - Absolute Fermi levels differ (about 0.9 eV) because the zero of the electrostatic
@@ -89,13 +113,17 @@ the experimental indirect gap (1.17 eV).
   criteria are different.
 - Both codes use the same pseudopotential, so this verifies the implementations,
   not the accuracy of the physics.
+- This Al pseudopotential includes 2s2p semicore states (11 valence electrons), so the
+  valence bandwidth is measured from the 5th band at Γ (εF - ε5(Γ)), not from band 1.
+- The 40 Ry cutoff is the same in both codes, so the comparison is valid, but it may be
+  too low for physical accuracy with semicore states. Convergence is tested in Stage 5.
 
 ## Roadmap
 
 - [x] Stage 1: Si total energy and Gamma eigenvalues
 - [x] Stage 2: E-V curve (lattice constant, bulk modulus)
 - [x] Stage 3: band structure and band gap
-- [ ] Stage 4: metal (Al) and smearing
+- [x] Stage 4: metal (Al) and smearing
 - [ ] Stage 5: convergence and timing
 - [ ] Stage 6: MoS2 monolayer
 
