@@ -1,0 +1,7 @@
+tmp/
+*.save/
+__pycache__/
+*.egg-info/
+.ipynb_checkpoints/
+systems/*/qe/scf.out
+systems/*/dftk/results.json
