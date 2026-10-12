@@ -1,3 +1,4 @@
+![tests](https://github.com/otnielxs/qe-vs-dftk/actions/workflows/tests.yml/badge.svg)
 # qe-vs-dftk
 
 Reproducible comparison of [Quantum ESPRESSO](https://www.quantum-espresso.org/) (QE)
