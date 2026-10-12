@@ -42,3 +42,22 @@ def parse_qe_energy(path):
     if not energies:
         raise ValueError(f"No converged total energy found in {path}")
     return float(energies[-1])
+def parse_qe_bands(path, n_bands):
+    """Eigenvalues (eV) of a QE 'bands' run: list of nk lists with n_bands floats each.
+
+    Requires verbosity='high' in the QE input. k-points are returned in the
+    same order as in the input file.
+    """
+    text = Path(path).read_text()
+    section = text.split("End of band structure calculation")[-1]
+    parts = re.split(r"k =[^\n]*?\(\s*\d+ PWs\)\s+bands \(ev\):", section)[1:]
+    if not parts:
+        raise ValueError("No band energies found (is verbosity='high' set?)")
+
+    bands = []
+    for p in parts:
+        values = [float(x) for x in re.findall(FLOAT, p)][:n_bands]
+        if len(values) != n_bands:
+            raise ValueError("Fewer eigenvalues than expected in a k-point block")
+        bands.append(values)
+    return bands

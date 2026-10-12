@@ -17,6 +17,7 @@ julia --project=. -e 'using Pkg; Pkg.instantiate()'
 python -m pip install -e ".[dev]"
 ./scripts/run_si.sh
 ./scripts/run_si_eos.sh
+./scripts/run_si_bands.sh
 ```
 
 ## Stage 1: bulk silicon
@@ -58,6 +59,27 @@ For reference, PBE literature values for Si are about 5.47 Å and 88-89 GPa;
 experiment gives about 5.43 Å and 99 GPa. PBE is known to overestimate the
 lattice constant and underestimate the bulk modulus.
 
+## Stage 3: band structure and band gap of silicon
+
+Same structure and settings as above (a = 10.26 Bohr, fixed occupations, 60 Ry / 30 Ha),
+band structure along L-Γ-X-W-K-Γ with 101 identical k-points in both codes.
+The path is given in Cartesian coordinates (units of 2π/a), so it means the same
+in both codes even though their primitive cells are chosen differently.
+Run with `./scripts/run_si_bands.sh`.
+
+| | Indirect gap (eV) | Direct gap at Γ (eV) |
+|---|---|---|
+| QE 7.5 | 0.5549 | 2.5602 |
+| DFTK 0.8.0 | 0.5548 | 2.5602 |
+
+![Si band structure](results/si_bands.png)
+
+Bands are aligned at the valence band maximum of each code, because absolute
+eigenvalues are not comparable between codes. The largest difference over all
+8 bands and 101 k-points is 0.094 meV. QE prints eigenvalues with 4 decimals, so
+differences of about 0.1 meV are rounding noise. As expected, PBE underestimates
+the experimental indirect gap (1.17 eV).
+
 ### Notes
 
 - Absolute Fermi levels differ (about 0.9 eV) because the zero of the electrostatic
@@ -71,11 +93,11 @@ lattice constant and underestimate the bulk modulus.
 ## Roadmap
 
 - [x] Stage 1: Si total energy and Gamma eigenvalues
-- [ ] Si with fixed occupations (clean band gap)
 - [x] Stage 2: E-V curve (lattice constant, bulk modulus)
-- [ ] Stage 3: metal (Al) and smearing
-- [ ] Stage 4: convergence and timing
-- [ ] Stage 5: MoS2 monolayer
+- [x] Stage 3: band structure and band gap
+- [ ] Stage 4: metal (Al) and smearing
+- [ ] Stage 5: convergence and timing
+- [ ] Stage 6: MoS2 monolayer
 
 ## Versions and credits
 

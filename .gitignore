@@ -7,3 +7,6 @@ systems/*/qe/scf.out
 systems/*/dftk/results.json
 systems/si_eos/qe/
 systems/si_eos/dftk/eos_results.json
+systems/si_bands/qe/
+systems/si_bands/kpath.json
+systems/si_bands/dftk/bands_results.json

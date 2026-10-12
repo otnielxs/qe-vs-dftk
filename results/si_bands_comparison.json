@@ -1,0 +1,22 @@
+{
+  "qe": {
+    "vbm_eV": 6.2305,
+    "cbm_eV": 6.7854,
+    "indirect_gap_eV": 0.5549,
+    "direct_gap_eV": 2.560199999999999,
+    "k_index_vbm": 20,
+    "k_index_cbm": 37
+  },
+  "dftk": {
+    "vbm_eV": 7.1292278600907775,
+    "cbm_eV": 7.6840544064643055,
+    "indirect_gap_eV": 0.554826546373528,
+    "direct_gap_eV": 2.5601818040181286,
+    "k_index_vbm": 100,
+    "k_index_cbm": 37
+  },
+  "delta_indirect_gap_meV": -0.07345362647193099,
+  "delta_direct_gap_meV": -0.018195981870583466,
+  "max_abs_band_difference_meV": 0.0944333244028428,
+  "n_kpoints": 101
+}

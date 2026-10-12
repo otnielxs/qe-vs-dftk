@@ -1,0 +1,94 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex e29c569..2b0c2ee 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -7,3 +7,6 @@[m [msystems/*/qe/scf.out[m
+ systems/*/dftk/results.json[m
+ systems/si_eos/qe/[m
+ systems/si_eos/dftk/eos_results.json[m
+[32m+[m[32msystems/si_bands/qe/[m
+[32m+[m[32msystems/si_bands/kpath.json[m
+[32m+[m[32msystems/si_bands/dftk/bands_results.json[m
+[1mdiff --git a/README.md b/README.md[m
+[1mindex b83e013..f5c4959 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -17,6 +17,7 @@[m [mjulia --project=. -e 'using Pkg; Pkg.instantiate()'[m
+ python -m pip install -e ".[dev]"[m
+ ./scripts/run_si.sh[m
+ ./scripts/run_si_eos.sh[m
+[32m+[m[32m./scripts/run_si_bands.sh[m
+ ```[m
+ [m
+ ## Stage 1: bulk silicon[m
+[36m@@ -58,6 +59,27 @@[m [mFor reference, PBE literature values for Si are about 5.47 Å and 88-89 GPa;[m
+ experiment gives about 5.43 Å and 99 GPa. PBE is known to overestimate the[m
+ lattice constant and underestimate the bulk modulus.[m
+ [m
+[32m+[m[32m## Stage 3: band structure and band gap of silicon[m
+[32m+[m
+[32m+[m[32mSame structure and settings as above (a = 10.26 Bohr, fixed occupations, 60 Ry / 30 Ha),[m
+[32m+[m[32mband structure along L-Γ-X-W-K-Γ with 101 identical k-points in both codes.[m
+[32m+[m[32mThe path is given in Cartesian coordinates (units of 2π/a), so it means the same[m
+[32m+[m[32min both codes even though their primitive cells are chosen differently.[m
+[32m+[m[32mRun with `./scripts/run_si_bands.sh`.[m
+[32m+[m
+[32m+[m[32m| | Indirect gap (eV) | Direct gap at Γ (eV) |[m
+[32m+[m[32m|---|---|---|[m
+[32m+[m[32m| QE 7.5 | 0.5549 | 2.5602 |[m
+[32m+[m[32m| DFTK 0.8.0 | 0.5548 | 2.5602 |[m
+[32m+[m
+[32m+[m[32m![Si band structure](results/si_bands.png)[m
+[32m+[m
+[32m+[m[32mBands are aligned at the valence band maximum of each code, because absolute[m
+[32m+[m[32meigenvalues are not comparable between codes. The largest difference over all[m
+[32m+[m[32m8 bands and 101 k-points is 0.094 meV. QE prints eigenvalues with 4 decimals, so[m
+[32m+[m[32mdifferences of about 0.1 meV are rounding noise. As expected, PBE underestimates[m
+[32m+[m[32mthe experimental indirect gap (1.17 eV).[m
+[32m+[m
+ ### Notes[m
+ [m
+ - Absolute Fermi levels differ (about 0.9 eV) because the zero of the electrostatic[m
+[36m@@ -71,11 +93,11 @@[m [mlattice constant and underestimate the bulk modulus.[m
+ ## Roadmap[m
+ [m
+ - [x] Stage 1: Si total energy and Gamma eigenvalues[m
+[31m-- [ ] Si with fixed occupations (clean band gap)[m
+ - [x] Stage 2: E-V curve (lattice constant, bulk modulus)[m
+[31m-- [ ] Stage 3: metal (Al) and smearing[m
+[31m-- [ ] Stage 4: convergence and timing[m
+[31m-- [ ] Stage 5: MoS2 monolayer[m
+[32m+[m[32m- [x] Stage 3: band structure and band gap[m
+[32m+[m[32m- [ ] Stage 4: metal (Al) and smearing[m
+[32m+[m[32m- [ ] Stage 5: convergence and timing[m
+[32m+[m[32m- [ ] Stage 6: MoS2 monolayer[m
+ [m
+ ## Versions and credits[m
+ [m
+[1mdiff --git a/src/qevsdftk/parse_qe.py b/src/qevsdftk/parse_qe.py[m
+[1mindex 7ac3167..0789799 100644[m
+[1m--- a/src/qevsdftk/parse_qe.py[m
+[1m+++ b/src/qevsdftk/parse_qe.py[m
+[36m@@ -42,3 +42,22 @@[m [mdef parse_qe_energy(path):[m
+     if not energies:[m
+         raise ValueError(f"No converged total energy found in {path}")[m
+     return float(energies[-1])[m
+[32m+[m[32mdef parse_qe_bands(path, n_bands):[m
+[32m+[m[32m    """Eigenvalues (eV) of a QE 'bands' run: list of nk lists with n_bands floats each.[m
+[32m+[m
+[32m+[m[32m    Requires verbosity='high' in the QE input. k-points are returned in the[m
+[32m+[m[32m    same order as in the input file.[m
+[32m+[m[32m    """[m
+[32m+[m[32m    text = Path(path).read_text()[m
+[32m+[m[32m    section = text.split("End of band structure calculation")[-1][m
+[32m+[m[32m    parts = re.split(r"k =[^\n]*?\(\s*\d+ PWs\)\s+bands \(ev\):", section)[1:][m
+[32m+[m[32m    if not parts:[m
+[32m+[m[32m        raise ValueError("No band energies found (is verbosity='high' set?)")[m
+[32m+[m
+[32m+[m[32m    bands = [][m
+[32m+[m[32m    for p in parts:[m
+[32m+[m[32m        values = [float(x) for x in re.findall(FLOAT, p)][:n_bands][m
+[32m+[m[32m        if len(values) != n_bands:[m
+[32m+[m[32m            raise ValueError("Fewer eigenvalues than expected in a k-point block")[m
+[32m+[m[32m        bands.append(values)[m
+[32m+[m[32m    return bands[m
