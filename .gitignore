@@ -13,3 +13,8 @@ systems/si_bands/dftk/bands_results.json
 systems/al/qe/
 systems/al/cases.json
 systems/al/dftk/al_results.json
+systems/convergence/qe/
+systems/convergence/cases.json
+systems/convergence/dftk/convergence_results.json
+systems/timing/qe/
+systems/timing/dftk/*.json

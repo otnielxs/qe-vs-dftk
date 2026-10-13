@@ -1,3 +1,4 @@
 [deps]
 DFTK = "acf6eb54-70d9-11e9-0013-234b7a5f5337"
 JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"

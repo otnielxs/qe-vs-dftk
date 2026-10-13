@@ -1,0 +1,22 @@
+{
+  "pseudos": {"si": "Si_ONCV_PBE-1.2.upf", "al": "Al_ONCV_PBE-1.2.upf"},
+  "workloads": {
+    "si8": {
+      "pseudo": "si", "element": "Si", "mass": 28.0855,
+      "cell": "cubic", "a_bohr": 10.26,
+      "positions_crystal": [[0.0, 0.0, 0.0], [0.0, 0.5, 0.5], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0],
+                            [0.25, 0.25, 0.25], [0.25, 0.75, 0.75], [0.75, 0.25, 0.75], [0.75, 0.75, 0.25]],
+      "occupations": {"kind": "fixed"},
+      "ecut_ry": 60.0, "nk": 4
+    },
+    "al": {
+      "pseudo": "al", "element": "Al", "mass": 26.9815,
+      "cell": "fcc", "a_bohr": 7.65,
+      "positions_crystal": [[0.0, 0.0, 0.0]],
+      "occupations": {"kind": "smearing", "smearing": "mv", "width_ry": 0.02},
+      "ecut_ry": 60.0, "nk": 24
+    }
+  },
+  "cores": [1, 2, 4],
+  "repeats": 3
+}

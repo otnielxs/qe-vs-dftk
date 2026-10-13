@@ -61,3 +61,16 @@ def parse_qe_bands(path, n_bands):
             raise ValueError("Fewer eigenvalues than expected in a k-point block")
         bands.append(values)
     return bands
+def _parse_clock(s):
+    """Convert QE clock strings like '0.94s', '1m 5.20s' or '1h 2m 3.00s' to seconds."""
+    units = {"h": 3600.0, "m": 60.0, "s": 1.0}
+    return sum(float(v) * units[u] for v, u in re.findall(r"(\d+(?:\.\d+)?)\s*([hms])", s))
+
+
+def parse_qe_wall_time(path):
+    """Total wall time (s) from the final PWSCF timing line of a QE output."""
+    text = Path(path).read_text()
+    found = re.findall(r"^\s*PWSCF\s*:\s*(.*?)\s+CPU\s+(.*?)\s+WALL", text, re.M)
+    if not found:
+        raise ValueError(f"No PWSCF timing line found in {path}")
+    return _parse_clock(found[-1][1])

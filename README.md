@@ -7,6 +7,14 @@ and [DFTK.jl](https://github.com/JuliaMolSim/DFTK.jl) on identical plane-wave DF
 The goal is to verify that both codes give the same answers under the same settings,
 and to help people who do not have QE installed try simple DFT simulations with DFTK.
 
+## Key findings
+
+- Same pseudopotential, same settings: QE 7.5 and DFTK 0.8.0 agree to 0.005 meV/atom (Si total energy),
+  3e-6 Å and 0.0004 GPa (Si lattice constant and bulk modulus), and 0.07 meV (Si band structure and gap).
+- Aluminum (smearing, k-points): agreement within 0.066 meV/atom (see Stage 4).
+- Convergence: Si needs 50 Ry (1 meV/atom), Al needs 80 Ry (semicore states).
+- Timing (one laptop): DFTK needs 1.3-1.4x the single-core time of QE on two small workloads.
+
 ## Quick start
 
 Requirements: QE (`pw.x`, MPI), Julia, Python 3.9+.
@@ -20,6 +28,9 @@ python -m pip install -e ".[dev]"
 ./scripts/run_si_eos.sh
 ./scripts/run_si_bands.sh
 ./scripts/run_al.sh
+julia --project=. -e 'using MPI; MPI.install_mpiexecjl()'
+./scripts/run_convergence.sh
+./scripts/run_timing.sh
 ```
 
 ## Stage 1: bulk silicon
@@ -87,16 +98,15 @@ the experimental indirect gap (1.17 eV).
 fcc Al, a = 7.65 Bohr, ONCV pseudopotential (SG15), 40 Ry / 20 Ha cutoff.
 Run with `./scripts/run_al.sh`. 16 cases: three smearing types (Gaussian,
 Marzari-Vanderbilt, Fermi-Dirac) at four widths on a 16x16x16 grid, and a k-grid
-scan from 8x8x8 to 24x24x24. QE `degauss` (Ry) corresponds to DFTK `temperature` (Ha) / 2 ... fill in
-the conversion you used.
+scan from 8x8x8 to 24x24x24. QE `degauss` (Ry) corresponds to DFTK `temperature` temperature (Ha) = degauss (Ry) / 2
 
 ![Al smearing and k-point convergence](results/al_smearing.png)
 
 | Quantity | Result |
 |---|---|
-| Max free-energy difference over all cases | ... meV/atom |
-| Max difference in bandwidth (εF - ε1(Γ)) | ... meV |
-| Bandwidth (QE, MV 0.02 Ry, 16x16x16) | ... eV |
+| Max free-energy difference over all cases | 0.066 meV/atom |
+| Max difference in bandwidth (εF - ε1(Γ)) | 0.085 meV |
+| Bandwidth (QE, MV 0.02 Ry, 16x16x16) | 11.1651 eV |
 
 Notes:
 - The Fermi level itself is not comparable between codes, so the occupied
@@ -104,6 +114,64 @@ Notes:
 - Marzari-Vanderbilt (cold) smearing gives a free energy that depends weakly on
   the width, while Gaussian and Fermi-Dirac depend strongly on it.
 - Metals need dense k-grids: the energy changes by ... meV/atom between 8x8x8 and 24x24x24.
+
+## Stage 5: convergence and timing
+
+### Convergence
+
+Ecut scans (at the base k-grid) and k-grid scans (at 60 Ry) for Si and Al in both codes
+(`./scripts/run_convergence.sh`). Energies are compared with the largest value of each scan,
+so "not reached" means the scan range was not wide enough to show convergence.
+
+![Convergence](results/convergence.png)
+
+| System | Ecut for 1 meV/atom | Ecut for 0.1 meV/atom | k-grid for 1 meV/atom | k-grid for 0.1 meV/atom |
+|---|---|---|---|---|
+| Si (scans: 20-100 Ry, k 2-12) | 50 Ry | 80 Ry | 10x10x10 | not reached |
+| Al (scans: 30-100 Ry, k 8-24) | 80 Ry | not reached | not reached | not reached |
+
+- Al has semicore states and needs a much higher cutoff than Si. The Stage 4 results
+  (40 Ry) and the base setting (60 Ry) are therefore not converged for Al in absolute terms.
+  They are still valid for comparing the codes, since both use identical settings.
+- The Si calculations in Stages 1-3 use an 8x8x8 grid, which is not converged to 1 meV/atom
+  (10x10x10 is needed).
+- QE and DFTK agree at every point of every scan: below 0.025 meV/atom for all Si cases and
+  at most 0.074 meV/atom for Al with Ecut >= 40 Ry. The largest difference is 0.394 meV/atom,
+  at the lowest Al cutoff (30 Ry), where the basis is far from converged.
+
+### Timing
+
+Time to solution for the same calculation on 1, 2 and 4 cores (`./scripts/run_timing.sh`).
+Machine: Intel Core i5-13450HX (16 logical cores), WSL2. QE 7.5: `mpirun -np N pw.x -nk N`
+(k-point pools). DFTK 0.8.0 (Julia 1.11.1): MPI over k-points, one Julia thread and one BLAS
+thread per rank. Median of 3 runs, after a warm-up run for DFTK (no compilation time).
+Tolerances: QE `conv_thr` = 1e-10 Ry, DFTK `tol` = 1e-6 (these measure different things;
+both reach the same energy to within 0.073 meV/atom).
+
+![Timing](results/timing.png)
+
+| Workload | Cores | QE (s) | DFTK (s) | DFTK / QE | QE speedup | DFTK speedup |
+|---|---|---|---|---|---|---|
+| Si, 8 atoms (4x4x4) | 1 | 23.23 | 29.32 | 1.26 | 1.00 | 1.00 |
+| | 2 | 14.88 | 19.88 | 1.34 | 1.56 | 1.48 |
+| | 4 | 8.16 | 16.12 | 1.98 | 2.85 | 1.82 |
+| Al (24x24x24) | 1 | 25.71 | 35.64 | 1.39 | 1.00 | 1.00 |
+| | 2 | 13.09 | 19.29 | 1.47 | 1.96 | 1.85 |
+| | 4 | 7.28 | 11.60 | 1.59 | 3.53 | 3.07 |
+
+On a single core, DFTK needed 1.3-1.4 times the time of QE for these two workloads.
+Al scaled similarly in both codes; Si with 8 atoms scaled less well in DFTK.
+
+Caveats:
+- Results are specific to this laptop, these two small workloads and these builds
+  (BLAS/FFT libraries: <fill in from `DFTK.versioninfo()` and your QE build>).
+- Repeats vary by up to about 10% (see error bars).
+- Iteration counts and convergence criteria differ between the codes.
+- DFTK with Julia threads did not speed up on the Al workload (38.5 s with 1 thread,
+  37.4 s with 4 threads), while MPI did, so MPI is used for DFTK here.
+- DFTK with 8 MPI ranks was killed on this laptop (probably out of memory), and the
+  hybrid CPU (performance and efficiency cores) limits scaling above 4 cores, so the
+  comparison stops at 4 cores.
 
 ### Notes
 
@@ -118,15 +186,6 @@ Notes:
   valence bandwidth is measured from the 5th band at Γ (εF - ε5(Γ)), not from band 1.
 - The 40 Ry cutoff is the same in both codes, so the comparison is valid, but it may be
   too low for physical accuracy with semicore states. Convergence is tested in Stage 5.
-
-## Roadmap
-
-- [x] Stage 1: Si total energy and Gamma eigenvalues
-- [x] Stage 2: E-V curve (lattice constant, bulk modulus)
-- [x] Stage 3: band structure and band gap
-- [x] Stage 4: metal (Al) and smearing
-- [ ] Stage 5: convergence and timing
-- [ ] Stage 6: MoS2 monolayer
 
 ## Versions and credits
 
