@@ -190,4 +190,4 @@ Caveats:
 ## Versions and credits
 
 - QE 7.5, DFTK 0.8.0
-- Pseudopotential: SG15 ONCV
+- [Pseudopotential: SG15 ONCV](http://quantum-simulation.org/potentials/sg15_oncv/index.htm)
