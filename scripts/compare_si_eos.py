@@ -50,16 +50,42 @@ print(f"Max |E_DFTK - E_QE| over all volumes: {np.abs(dE_mev_atom).max():.5f} me
 # Figure
 Vfine = np.linspace(V.min(), V.max(), 300)
 fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+colors = {
+    "QE": "#1f77b4",
+    "DFTK": "#d62728",
+}
 for name, e, fit, marker in [("QE", e_qe, fit_qe, "o"), ("DFTK", e_dftk, fit_dftk, "x")]:
     ref = fit["E0_Ry"]
-    ax[0].plot(V, (e - ref) * RY_TO_EV * 1000 / N_ATOMS, marker, label=f"{name} points")
-    ax[0].plot(Vfine, (eos_curve(fit, Vfine) - ref) * RY_TO_EV * 1000 / N_ATOMS,
-               "-", lw=1, label=f"{name} BM fit")
+ax[0].plot(
+    V,
+    (e - ref) * RY_TO_EV * 1000 / N_ATOMS,
+    marker=marker,
+    linestyle="None",
+    color=colors[name],
+)
+
+ax[0].plot(
+    Vfine,
+    (eos_curve(fit, Vfine) - ref) * RY_TO_EV * 1000 / N_ATOMS,
+    color=colors[name],
+    lw=1.5,
+    label=f"{name} BM fit",
+)
 ax[0].set_xlabel("Volume per primitive cell (Bohr$^3$)")
 ax[0].set_ylabel("E - E$_0$ (meV/atom)")
 ax[0].set_title("Si equation of state")
-ax[0].legend()
-ax[1].plot(a, dE_mev_atom, "o-")
+ax[0].legend(
+    frameon=False,
+    loc="best"
+)
+ax[1].plot(
+    a,
+    dE_mev_atom,
+    marker="o",
+    linestyle="-",
+    markerfacecolor="white",
+    color="#1f77b4",
+)
 ax[1].set_xlabel("Lattice constant (Bohr)")
 ax[1].set_ylabel("E$_{DFTK}$ - E$_{QE}$ (meV/atom)")
 ax[1].set_title("Energy difference at each volume")
