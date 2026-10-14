@@ -13,7 +13,7 @@ and to help people who do not have QE installed try simple DFT simulations with 
   3e-6 Å and 0.0004 GPa (Si lattice constant and bulk modulus), and 0.07 meV (Si band structure and gap).
 - Aluminum (smearing, k-points): agreement within 0.066 meV/atom (see Stage 4).
 - Convergence: Si needs 50 Ry (1 meV/atom), Al needs 80 Ry (semicore states).
-- Timing (one laptop): DFTK needs 1.3-1.4x the single-core time of QE on two small workloads.
+- Timing: DFTK needs 1.3-1.4x the single-core time of QE on two small workloads.
 
 ## Quick start
 
@@ -38,7 +38,7 @@ julia --project=. -e 'using MPI; MPI.install_mpiexecjl()'
 | Setting | QE | DFTK |
 |---|---|---|
 | Functional | PBE | PBE |
-| Pseudopotential | ONCV (SG15) | same file |
+| Pseudopotential | ONCV (SG15) | ONCV (SG15) |
 | Cutoff | 60 Ry | 30 Ha |
 | k-grid | 6x6x6, Gamma-centered | 6x6x6 |
 | Smearing | Marzari-Vanderbilt, 0.2 Ry | Marzari-Vanderbilt, 0.1 Ha |
@@ -52,7 +52,7 @@ Results (QE 7.5 vs DFTK 0.8.0):
 
 ## Stage 2: equation of state of bulk silicon
 
-9 lattice constants (10.33 Bohr ±4%), fixed occupations, 60 Ry / 30 Ha cutoff,
+9 lattice constants (10.33 Bohr ± 4%), fixed occupations, 60 Ry / 30 Ha cutoff,
 8x8x8 k-grid, same ONCV pseudopotential. Third-order Birch-Murnaghan fit.
 Run with `./scripts/run_si_eos.sh`.
 
@@ -113,7 +113,6 @@ Notes:
   bandwidth is used instead.
 - Marzari-Vanderbilt (cold) smearing gives a free energy that depends weakly on
   the width, while Gaussian and Fermi-Dirac depend strongly on it.
-- Metals need dense k-grids: the energy changes by ... meV/atom between 8x8x8 and 24x24x24.
 
 ## Stage 5: convergence and timing
 
