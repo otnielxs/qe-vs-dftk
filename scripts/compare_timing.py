@@ -75,7 +75,14 @@ for w in params["workloads"]:
 print(f"\nMax |E_DFTK - E_QE| over all runs: {max_dE:.4f} meV/atom")
 
 # ---------------- Figure ----------------
+wl = list(params["workloads"])
 
+fig, axes = plt.subplots(
+    len(wl),
+    2,
+    figsize=(11, 4.3 * len(wl)),
+    squeeze=False,
+)
 fig, axes = plt.subplots(
     len(wl),
     2,
