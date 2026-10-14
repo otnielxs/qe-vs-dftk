@@ -75,40 +75,132 @@ for w in params["workloads"]:
 print(f"\nMax |E_DFTK - E_QE| over all runs: {max_dE:.4f} meV/atom")
 
 # ---------------- Figure ----------------
-wl = list(params["workloads"])
-fig, axes = plt.subplots(len(wl), 2, figsize=(11, 4.3 * len(wl)), squeeze=False)
+
+fig, axes = plt.subplots(
+    len(wl),
+    2,
+    figsize=(11, 4.3 * len(wl)),
+    squeeze=False,
+)
+
 for i, w in enumerate(wl):
-    for label, key, fmt in [("QE", "qe", "o-"), ("DFTK (MPI)", "dftk", "s--")]:
+
+    for label, key, marker, linestyle, color in [
+        ("QE", "qe", "o", "-", "#1f77b4"),
+        ("DFTK (MPI)", "dftk", "s", "--", "#d62728"),
+    ]:
+
         med = [table[(w, n)][f"{key}_med"] for n in cores]
-        lo = [m - min(table[(w, n)][f"{key}_times"]) for m, n in zip(med, cores)]
-        hi = [max(table[(w, n)][f"{key}_times"]) - m for m, n in zip(med, cores)]
-        axes[i][0].errorbar(cores, med, yerr=[lo, hi], fmt=fmt, label=label, capsize=3)
-        axes[i][1].plot(cores, [med[0] / m for m in med], fmt, label=label)
-    axes[i][1].plot(cores, [n / cores[0] for n in cores], ":", color="gray", label="ideal")
-    axes[i][0].set_xscale("log", base=2)
+
+        lo = [
+            m - min(table[(w, n)][f"{key}_times"])
+            for m, n in zip(med, cores)
+        ]
+
+        hi = [
+            max(table[(w, n)][f"{key}_times"]) - m
+            for m, n in zip(med, cores)
+        ]
+
+        axes[i][0].errorbar(
+            cores,
+            med,
+            yerr=[lo, hi],
+            marker=marker,
+            linestyle=linestyle,
+            color=color,
+            markerfacecolor="white" if marker == "o" else color,
+            label=label,
+            capsize=3,
+        )
+
+        axes[i][1].plot(
+            cores,
+            [med[0] / m for m in med],
+            marker=marker,
+            linestyle=linestyle,
+            color=color,
+            markerfacecolor="white" if marker == "o" else color,
+            label=label,
+        )
+
+    axes[i][1].plot(
+        cores,
+        [n / cores[0] for n in cores],
+        linestyle=":",
+        color="gray",
+        alpha=0.8,
+        label="ideal",
+    )
+
+    axes[i][0].set_xscale(
+        "log",
+        base=2,
+    )
+
     axes[i][0].set_yscale("log")
+
     axes[i][0].set_xticks(cores)
     axes[i][0].set_xticklabels(cores)
-    axes[i][0].set_xlabel("Cores (MPI processes / Julia threads)")
+
+    axes[i][0].set_xlabel(
+        "Cores (MPI processes / Julia threads)"
+    )
+
     axes[i][0].set_ylabel("Wall time (s)")
     axes[i][0].set_title(f"{w}: time to solution")
-    axes[i][0].legend()
+
+    axes[i][0].legend(
+        frameon=False,
+        loc="best",
+    )
+
     axes[i][1].set_xlabel("Cores")
     axes[i][1].set_ylabel("Speedup vs 1 core")
     axes[i][1].set_title(f"{w}: parallel speedup")
-    axes[i][1].legend()
-fig.tight_layout()
-(ROOT / "results").mkdir(exist_ok=True)
-fig.savefig(ROOT / "results" / "timing.png", dpi=150)
 
-(ROOT / "results" / "timing_comparison.json").write_text(json.dumps({
-    "date": str(date.today()), "cpu": cpu_model(), "logical_cores": os.cpu_count(),
-    "qe_version": qe_version, "dftk_version": dftk_version, "julia_version": julia_version,
-    "dftk_parallel_mode": "MPI (1 Julia thread and 1 BLAS thread per rank)",
-    "max_abs_dE_meV_per_atom": max_dE,
-    "runs": {f"{w}_{n}": v for (w, n), v in table.items()},
-}, indent=2))
+    axes[i][1].legend(
+        frameon=False,
+        loc="best",
+    )
+
+fig.tight_layout()
+
+(ROOT / "results").mkdir(exist_ok=True)
+
+fig.savefig(
+    ROOT / "results" / "timing.png",
+    dpi=150,
+)
+
+(ROOT / "results" / "timing_comparison.json").write_text(
+    json.dumps(
+        {
+            "date": str(date.today()),
+            "cpu": cpu_model(),
+            "logical_cores": os.cpu_count(),
+            "qe_version": qe_version,
+            "dftk_version": dftk_version,
+            "julia_version": julia_version,
+            "dftk_parallel_mode": (
+                "MPI (1 Julia thread and 1 BLAS thread per rank)"
+            ),
+            "max_abs_dE_meV_per_atom": max_dE,
+            "runs": {
+                f"{w}_{n}": v
+                for (w, n), v in table.items()
+            },
+        },
+        indent=2,
+    )
+)
 
 ok = max_dE < TOL_E_MEV
-print("PASS (both codes solved the same problem)" if ok else "FAIL (energies differ)")
+
+print(
+    "PASS (both codes solved the same problem)"
+    if ok
+    else "FAIL (energies differ)"
+)
+
 sys.exit(0 if ok else 1)
