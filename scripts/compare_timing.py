@@ -11,6 +11,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from qevsdftk.parse_qe import parse_qe_energy, parse_qe_wall_time
+from qevsdftk.plotstyle import apply_style
+
+apply_style()
 
 ROOT = Path(__file__).resolve().parents[1]
 SYS = ROOT / "systems" / "timing"
