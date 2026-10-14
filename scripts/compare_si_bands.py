@@ -65,24 +65,70 @@ ticks = [x[i] for i in kpath["label_index"]]
 labels = ["Γ" if t == "G" else t for t in kpath["labels"]]
 
 fig, ax = plt.subplots(1, 2, figsize=(11, 4.5))
+
+colors = {
+    "QE": "#1f77b4",
+    "DFTK": "#d62728",
+}
+
 for b in range(nb):
-    ax[0].plot(x, rel_qe[:, b], "-", color="tab:blue", lw=1.8, label="QE" if b == 0 else None)
-    ax[0].plot(x, rel_dftk[:, b], "--", color="tab:red", lw=1.0, label="DFTK" if b == 0 else None)
-    ax[1].plot(x, diff_meV[:, b], lw=0.8)
+    ax[0].plot(
+        x,
+        rel_qe[:, b],
+        linestyle="-",
+        color=colors["QE"],
+        lw=1.8,
+        label="QE" if b == 0 else None,
+    )
+
+    ax[0].plot(
+        x,
+        rel_dftk[:, b],
+        linestyle="--",
+        color=colors["DFTK"],
+        lw=1.0,
+        label="DFTK" if b == 0 else None,
+    )
+
+    ax[1].plot(
+        x,
+        diff_meV[:, b],
+        lw=0.8,
+    )
+
 for a_ in ax:
     for t in ticks:
-        a_.axvline(t, color="gray", lw=0.5)
+        a_.axvline(
+            t,
+            color="gray",
+            lw=0.5,
+            alpha=0.6,
+        )
+
     a_.set_xticks(ticks)
     a_.set_xticklabels(labels)
     a_.set_xlim(x[0], x[-1])
-ax[0].axhline(0, color="gray", lw=0.5)
+
+ax[0].axhline(
+    0,
+    color="gray",
+    lw=0.7,
+    alpha=0.8,
+)
+
 ax[0].set_ylim(-13, 8)
 ax[0].set_ylabel("E - E$_{VBM}$ (eV)")
 ax[0].set_title("Si band structure (PBE)")
-ax[0].legend()
+ax[0].legend(
+    frameon=False,
+    loc="best",
+)
+
 ax[1].set_ylabel("DFTK - QE (meV)")
 ax[1].set_title("Band differences (all 8 bands)")
+
 fig.tight_layout()
+
 (ROOT / "results").mkdir(exist_ok=True)
 fig.savefig(ROOT / "results" / "si_bands.png", dpi=150)
 
